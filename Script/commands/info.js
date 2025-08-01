@@ -1,39 +1,67 @@
 module.exports.config = {
   name: "info",
-  version: "1.1.0",
+  version: "1.2.6",
   hasPermssion: 0,
-  credits: "Rasel Mahmud",
-  description: "Displays bot and admin info with dynamic group & user count",
-  commandCategory: "Information",
-  usages: "[info | botinfo | aboutbot | magicinfo]",
+  credits: "Rasel Mahmud", // ←✅ updated
+  description: "🥰আসসালামু আলাইকুম 🥰",
+  commandCategory: "For users",
+  hide: true,
+  usages: "",
   cooldowns: 5,
-  aliases: ["info", "botinfo", "aboutbot", "magicinfo"]
 };
 
-module.exports.run = async ({ api, event }) => {
-  const prefix = global.config.PREFIX || "*";
-  const botName = global.config.BOT_NAME || "MAGIC OF SOUND";
+module.exports.run = async function ({ api, event, args, Users, permssion, getText, Threads }) {
+  const { threadID } = event;
+  const { configPath } = global.client;
+  const { ADMINBOT, NDH } = global.config;
+  const { allUserID, allThreadID } = global.data;
+  const request = global.nodemodule["request"];
+  const fs = global.nodemodule["fs-extra"];
+  const moment = require("moment-timezone");
 
-  try {
-    // গ্রুপ লিস্ট নিয়ে আসা (100 টা থ্রেড পর্যন্ত)
-    const allThreads = await api.getThreadList(100, null, ["INBOX"]);
-    const groupThreads = allThreads.filter(thread => thread.isGroup);
-    const totalGroups = groupThreads.length;
+  delete require.cache[require.resolve(configPath)];
+  var config = require(configPath);
+  const listAdmin = ADMINBOT || config.ADMINBOT || [];
+  const listNDH = NDH || config.NDH || [];
 
-    // গ্রুপ গুলোর সব মেম্বার আইডি নিয়ে ইউনিক ইউজার হিসেব করা
-    let userSet = new Set();
-    for (const thread of groupThreads) {
-      try {
-        const info = await api.getThreadInfo(thread.threadID);
-        info.participantIDs.forEach(id => userSet.add(id));
-      } catch (e) {
-        // error হ্যান্ডেলিং, কোনো সমস্যা হলে স্কিপ করবে
-      }
+  const PREFIX = config.PREFIX;
+  const namebot = "༊✨𝐌𝐀𝐆𝐈𝐂🔹𝐎𝐅🔸𝐒𝐎𝐔𝐍𝐃✨᯾"; // ←✅ updated
+  const { commands } = global.client;
+  const threadSetting = (await Threads.getData(String(threadID))).data || {};
+  const prefix = (threadSetting.hasOwnProperty("PREFIX")) ? threadSetting.PREFIX : PREFIX;
+
+  const dateNow = Date.now();
+  const time = process.uptime(),
+    hours = Math.floor(time / (60 * 60)),
+    minutes = Math.floor((time % (60 * 60)) / 60),
+    seconds = Math.floor(time % 60);
+
+  var link = [
+    "https://i.imgur.com/eZY0fWe.jpeg"
+  ];
+
+  var i = 1;
+  var msg = [];
+  for (const idAdmin of listAdmin) {
+    if (parseInt(idAdmin)) {
+      const name = await Users.getNameUser(idAdmin);
+      msg.push(`${i++}/ ${name} - ${idAdmin}`);
     }
-    const totalUsers = userSet.size;
+  }
 
-    const message = `
-╭───💠 𝗕𝗢𝗧 𝗜𝗡𝗙𝗢 💠───╮
+  var msg1 = [];
+  for (const idNDH of listNDH) {
+    if (parseInt(idNDH)) {
+      const name1 = (await Users.getData(idNDH)).name;
+      msg1.push(`${i++}/ ${name1} - ${idNDH}`);
+    }
+  }
+
+  const totalUsers = allUserID.length;
+  const totalGroups = allThreadID.length;
+
+  const body = `
+╭───❍ 𝗕𝗢𝗧 𝗜𝗡𝗙𝗢 ❍───╮
 ┃ 🤖 Bot Name       : ${namebot}
 ┃ 👑 Owner          : RASEL MAHMUD
 ┃ 🔗 Group Support  : https://m.me/j/AbZnvggXXnMoLZd7/
@@ -44,16 +72,15 @@ module.exports.run = async ({ api, event }) => {
 ┃ 👥 Total Users    : ${totalUsers}
 ┃ 💬 Total Groups   : ${totalGroups}
 ╰───────────────╯
-
-🌟 Thank you for using our bot!
-🔔 Stay connected & spread love 💙
-
-📘 Facebook: https://www.facebook.com/raselmahmud.q
 `;
 
-    return api.sendMessage(message, event.threadID, event.messageID);
-  } catch (error) {
-    console.error(error);
-    return api.sendMessage("⚠️ তথ্য আনতে সমস্যা হয়েছে, পরে আবার চেষ্টা করুন।", event.threadID);
-  }
+  var callback = () =>
+    api.sendMessage({
+      body: body,
+      attachment: fs.createReadStream(__dirname + "/cache/kensu.jpg")
+    }, threadID, () => fs.unlinkSync(__dirname + "/cache/kensu.jpg"));
+
+  return request(encodeURI(link[0]))
+    .pipe(fs.createWriteStream(__dirname + "/cache/kensu.jpg"))
+    .on("close", () => callback());
 };
