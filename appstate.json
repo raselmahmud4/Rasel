@@ -1,7 +1,128 @@
-....
-
-
-        𝐚dd 𝐲𝐨𝐮𝐫 𝐜𝟑𝐜 𝐅𝐛𝐬𝐭𝐚𝐭𝐞 𝐜𝐨𝐨𝐤𝐢𝐞 🍪
-
-
-.....
+[
+    {
+        "key": "dbln",
+        "value": "%7B%2261571550050635%22%3A%22pFpcUnxN%22%2C%22100094086843454%22%3A%22OdWbdiE3%22%2C%22100024220812646%22%3A%22zA8JeHdn%22%7D",
+        "domain": "facebook.com",
+        "path": "/login/device-based/",
+        "hostOnly": false,
+        "creation": "2025-08-01T09:55:07.668Z",
+        "lastAccessed": "2025-08-01T09:55:07.670Z"
+    },
+    {
+        "key": "sb",
+        "value": "EL4ZaC_dE4D2Lo0GGwyHHmoX",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2025-08-01T09:55:07.670Z",
+        "lastAccessed": "2025-08-01T09:55:07.670Z"
+    },
+    {
+        "key": "datr",
+        "value": "mz8aaE4ObQkKRKr2GzEoWh6k",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2025-08-01T09:55:07.670Z",
+        "lastAccessed": "2025-08-01T09:55:07.670Z"
+    },
+    {
+        "key": "ps_l",
+        "value": "1",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2025-08-01T09:55:07.670Z",
+        "lastAccessed": "2025-08-01T09:55:07.670Z"
+    },
+    {
+        "key": "ps_n",
+        "value": "1",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2025-08-01T09:55:07.670Z",
+        "lastAccessed": "2025-08-01T09:55:07.670Z"
+    },
+    {
+        "key": "pas",
+        "value": "100094086843454%3Azg7etmW7Lg%2C100024220812646%3AFe7toqI1Oh%2C61567543834066%3A6XLb81qGHA",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2025-08-01T09:55:07.670Z",
+        "lastAccessed": "2025-08-01T09:55:07.670Z"
+    },
+    {
+        "key": "c_user",
+        "value": "61567543834066",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2025-08-01T09:55:07.670Z",
+        "lastAccessed": "2025-08-01T09:55:07.670Z"
+    },
+    {
+        "key": "xs",
+        "value": "38%3AGjPlafTxMteUWA%3A2%3A1753089752%3A-1%3A-1",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2025-08-01T09:55:07.670Z",
+        "lastAccessed": "2025-08-01T09:55:07.670Z"
+    },
+    {
+        "key": "locale",
+        "value": "bn_IN",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2025-08-01T09:55:07.670Z",
+        "lastAccessed": "2025-08-01T09:55:07.670Z"
+    },
+    {
+        "key": "vpd",
+        "value": "v1%3B810x412x2.3615882396698",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2025-08-01T09:55:07.670Z",
+        "lastAccessed": "2025-08-01T09:55:07.670Z"
+    },
+    {
+        "key": "fr",
+        "value": "0R4vFRFQkUwBSJGMo.AWcsdxEav7Pb894a42GkC5Ad5IJG_wdg2bdExGC9Um7s1UAKHSA.BoGj-b..AAA.0.0.Boi9HS.AWcXn8qHnzljCv9kvgpfnnC-GtI",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2025-08-01T09:55:07.670Z",
+        "lastAccessed": "2025-08-01T09:55:07.670Z"
+    },
+    {
+        "key": "wl_cbv",
+        "value": "v2%3Bclient_version%3A2884%3Btimestamp%3A1753993682",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2025-08-01T09:55:07.670Z",
+        "lastAccessed": "2025-08-01T09:55:07.670Z"
+    },
+    {
+        "key": "fbl_st",
+        "value": "100629949%3BT%3A29233229",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2025-08-01T09:55:07.670Z",
+        "lastAccessed": "2025-08-01T09:55:07.670Z"
+    },
+    {
+        "key": "ar_debug",
+        "value": "1",
+        "domain": "facebook.com",
+        "path": "/",
+        "hostOnly": false,
+        "creation": "2025-08-01T09:55:07.670Z",
+        "lastAccessed": "2025-08-01T09:55:07.670Z"
+    }
+]
