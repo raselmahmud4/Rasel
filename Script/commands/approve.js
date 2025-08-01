@@ -19,7 +19,8 @@ module.exports.config = {
   description: "পেন্ডিং গ্রুপ রিভিউ করে reply এর মাধ্যমে approve/remove করুন",
   commandCategory: "system",
   usages: "[duyet] → সব পেন্ডিং গ্রুপ দেখাবে\n[reply 0] → অ্যাপ্রুভ করবে\n[reply 0 cancel] → বাতিল করবে",
-  cooldowns: 5
+  cooldowns: 5,
+  botNickname: "🤖 Magic of Sound"
 };
 
 module.exports.handleReply = async function({ handleReply, api, event }) {
@@ -39,19 +40,48 @@ module.exports.handleReply = async function({ handleReply, api, event }) {
     pending = pending.filter(id => id !== target.threadID);
     fs.writeFileSync(approvedPath, JSON.stringify(approved, null, 2));
     fs.writeFileSync(pendingPath, JSON.stringify(pending, null, 2));
+
+    // ✅ অ্যাপ্রুভড গ্রুপে অটো মেসেজ
+    await api.sendMessage(
+      "🎉 Congratulations! This group is now approved.\n🔓 All bot features are now unlocked for this group.",
+      target.threadID
+    );
+
+    // ✅ বটের নাম অটো সেট
+    await api.changeNickname(module.exports.config.botNickname, target.threadID, api.getCurrentUserID());
+
     return api.sendMessage(`✅ '${target.name}' গ্রুপটি এখন অ্যাপ্রুভড।`, threadID, messageID);
   }
 };
 
 module.exports.handleEvent = async function({ event, api }) {
-  const { threadID } = event;
+  const { threadID, body } = event;
+
+  // Approve কমান্ড ধরে অ্যাপ্রুভ করে দাও (শুধু পেন্ডিং এ থাকলে)
+  if (body?.toLowerCase().trim() === "approve" && pending.includes(threadID)) {
+    approved.push(threadID);
+    pending = pending.filter(id => id !== threadID);
+    fs.writeFileSync(approvedPath, JSON.stringify(approved, null, 2));
+    fs.writeFileSync(pendingPath, JSON.stringify(pending, null, 2));
+
+    await api.sendMessage(
+      "🎉 Congratulations! This group is now approved.\n🔓 All bot features are now unlocked for this group.",
+      threadID
+    );
+
+    await api.changeNickname(module.exports.config.botNickname, threadID, api.getCurrentUserID());
+
+    return;
+  }
+
+  // নতুন গ্রুপ হলে pending list এ ঢোকাও
   if (!approved.includes(threadID) && !pending.includes(threadID)) {
     pending.push(threadID);
     fs.writeFileSync(pendingPath, JSON.stringify(pending, null, 2));
     api.sendMessage(
       "⏳ এই গ্রুপটি পেন্ডিং তালিকায় যোগ হয়েছে।\n" +
       "অনুগ্রহ করে অনুমোদনের জন্য অ্যাডমিনের সাথে যোগাযোগ করুন।\n\n" +
-      "🤖 Bot Name: ༊✨𝐌𝐀𝐆𝐈𝐂🔹𝐎𝐅🔸𝐒𝐎𝐔𝐍𝐃✨᯾\n" +
+      "🤖 Bot Name: " + module.exports.config.botNickname + "\n" +
       "👤 Moderator: Rasel Mahmud",
       threadID
     );
