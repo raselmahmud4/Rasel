@@ -5,17 +5,7 @@
     "autoCreateDB": true,
     "notiGroup": true,
     "NOTIFICATION": true,
-    "allowInbox": true,
-    "autoClean": true,
-    "commandDisabled": [
-        "sim.js"
-    ],
-    "eventDisabled": [
-        "join.js"
-    ],
-    "EMAIL": "",
-    "PASSWORD": "",
-    "OT,
+    "allowInbox": false,
     "autoClean": true,
     "commandDisabled": [
         "sim.js"
@@ -34,7 +24,7 @@
         "100024220812646"
     ],
     "NDH": [
-        "100000478146113"
+        "100024220812646"
     ],
     "DATABASE": {
         "sqlite": {
