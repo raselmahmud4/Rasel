@@ -27,28 +27,29 @@ module.exports.handleEvent = function ({ api, event }) {
   if (validCommands.includes(text)) {
     const msg = {
       body: `
-╔═════════════◇🌟◇═════════════╗
-         𝘽𝙊𝙏 𝙊𝙒𝙉𝙀𝙍 𝙄𝙉𝙁𝙊
-╚═════════════◇💠◇═════════════╝
+╔═══════◇🌟◇═══════╗
+        𝘽𝙊𝙏 𝙊𝙒𝙉𝙀𝙍 𝙄𝙉𝙁𝙊
+╚═══════◇💠◇═══════╝
 
-🪪 Name       : Rasel Mahmud
-📏 Height     : 5 feet 8 inches
-🏠 Location   : Mymensingh
-🎓 Education  : Studying in Rajshahi
+╔🪪 Name       : Rasel Mahmud
+╚📏 Height     : 5 feet 8 inches
 
-🌐 Social Links:
-📘 Facebook   : fb.com/raselmahmud.q
-📷 Instagram  : @rmsilentgaming
-🛡️ YouTube    : youtube.com/@rmsilentgaming
+╔🏠 Location   : Mymensingh
+╚🎓 Education  : Studying in Rajshahi
 
-╔═════════════◇✨◇═════════════╗
+╔🌐 Social Links:
+╔📘 Facebook   : fb.com/raselmahmud.q
+╚📷 Instagram  : @rmsilentgaming
+╚🛡️ YouTube    : youtube.com/@rmsilentgaming
+
+═══════════◇✨◇═════════
 Thanks for your interest in the owner!
-       🔹 Magic Of Sound Bot 🔹
-╚═════════════◇🔮◇═════════════╝`
+   ༊✨𝐌𝐀𝐆𝐈𝐂🔹𝐎𝐅🔸𝐒𝐎𝐔𝐍𝐃✨᯾
+═══════════◇🔮◇════════`
     };
 
     api.sendMessage(msg, threadID, messageID);
-    api.setMessageReaction("🧿", messageID, () => {}, true);
+    api.setMessageReaction("🤺", messageID, () => {}, true);
   }
 };
 
