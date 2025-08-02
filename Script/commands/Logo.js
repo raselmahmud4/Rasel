@@ -1,6 +1,6 @@
 module.exports.config = {
   name: "logo",
-  version: "3.0.0",
+  version: "3.1.0",
   hasPermssion: 0,
   credits: "Rasel Mahmud",
   description: "AI দিয়ে একাধিক লোগো তৈরি",
@@ -23,26 +23,29 @@ module.exports.run = async function ({ api, event, args }) {
 
   try {
     const prompt = encodeURIComponent(`${brandName} logo, minimal, vector, modern, clean white background`);
-    const res = await axios.get(`https://lexica.art/api/v1/search?q=${prompt}`);
-    const images = res.data.images?.slice(0, 5); // সর্বোচ্চ ৫টা লোগো
+    const url = `https://lexica.art/api/v1/search?q=${prompt}`;
+
+    const res = await axios.get(url);
+    const images = res.data.images?.slice(0, 5);
 
     if (!images || images.length === 0) {
-      return api.sendMessage("😓 দুঃখিত, কোনো লোগো পাওয়া যায়নি!", event.threadID);
+      return api.sendMessage(`❌ কোনো লোগো পাওয়া যায়নি!\n🔎 API: ${url}`, event.threadID);
     }
 
     const files = [];
 
     for (let i = 0; i < images.length; i++) {
-      const url = images[i].src;
+      const imgUrl = images[i].src;
       const filePath = __dirname + `/cache/${brandName}_logo_${i}.png`;
 
-      await new Promise((resolve) => {
-        request(url)
+      await new Promise((resolve, reject) => {
+        request(imgUrl)
           .pipe(fs.createWriteStream(filePath))
           .on("close", () => {
             files.push(fs.createReadStream(filePath));
             resolve();
-          });
+          })
+          .on("error", reject);
       });
     }
 
@@ -54,11 +57,11 @@ module.exports.run = async function ({ api, event, args }) {
       event.threadID,
       () => {
         api.unsendMessage(waiting.messageID);
-        files.forEach((f) => fs.unlinkSync(f.path));
+        files.forEach(f => fs.unlinkSync(f.path));
       }
     );
-  } catch (e) {
-    console.error(e);
-    api.sendMessage("❌ লোগো তৈরিতে সমস্যা হয়েছে। আবার চেষ্টা করুন!", event.threadID);
+  } catch (err) {
+    console.error("❌ LOGO ERROR:", err);
+    api.sendMessage(`❌ লোগো তৈরিতে সমস্যা হয়েছে!\n\n🛠️ Error: ${err.message || err}`, event.threadID);
   }
 };
