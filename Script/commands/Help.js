@@ -11,12 +11,20 @@ module.exports.config = {
 
 module.exports.languages = {
   "en": {
-    "moduleInfo": "🔹 Command: %1\n📄 Description: %2\n📌 Usage: %3\n📂 Category: %4\n⏱ Cooldown: %5s\n👤 Permission: %6\n💠 Credit: %7",
+    "moduleInfo": `╔═════[ ℹ️ 𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗜𝗡𝗙𝗢 ]═════╗
+🔹 নাম: %1
+📄 বিবরণ: %2
+📌 ব্যবহার: %3
+📂 ক্যাটেগরি: %4
+⏱️ কুলডাউন: %5s
+👤 পারমিশন: %6
+💠 ক্রেডিট: %7
+╚════════════════════╝`,
     "user": "User",
     "adminGroup": "Admin (Group)",
     "adminBot": "Admin (Bot)",
-    "notFound": "❌ No command named '%1' was found.",
-    "pageNotFound": "❌ No help page numbered %1 found."
+    "notFound": "❌ '%1' নামে কোনো কমান্ড খুঁজে পাওয়া যায়নি।",
+    "pageNotFound": "❌ %1 নম্বর হেল্প পেজ খুঁজে পাওয়া যায়নি।"
   }
 };
 
@@ -44,7 +52,7 @@ module.exports.handleEvent = function ({ api, event, getText }) {
       getText(
         "moduleInfo",
         command.config.name,
-        command.config.description,
+        command.config.description || "🚫 কোনো বিবরণ নেই",
         `${prefix}${command.config.name}${command.config.usages ? " " + command.config.usages : ""}`,
         command.config.commandCategory || "Uncategorized",
         command.config.cooldowns || 5,
@@ -91,7 +99,8 @@ module.exports.run = async function ({ api, event, args }) {
     }));
 
   const pageSize = 5;
-  const page = args?.[0] ? parseInt(args[0]) : 1;
+  const rawPage = args?.[0];
+  const page = !rawPage || isNaN(rawPage) ? 1 : parseInt(rawPage);
   const totalPages = Math.ceil(sortedCategories.length / pageSize);
 
   if (page > totalPages || page < 1) {
@@ -102,13 +111,13 @@ module.exports.run = async function ({ api, event, args }) {
   const end = start + pageSize;
   const pageCategories = sortedCategories.slice(start, end);
 
-  let msg = `╭━〔✨ 𝗠𝗔𝗚𝗜𝗖 𝗢𝗙 𝗦𝗢𝗨𝗡𝗗 ✨〕━╮\n│  📄 Help Page ${page}/${totalPages}\n╰━━━━━━━━━━━━━━━━╯`;
+  let msg = `╔═══『 ✨ 𝗠𝗔𝗚𝗜𝗖 𝗢𝗙 𝗦𝗢𝗨𝗡𝗗 ✨ 』═══╗\n      📖 হেল্প পেজ: ${page}/${totalPages}\n╚═════════════════════════╝`;
 
   for (const cat of pageCategories) {
-    msg += `\n\n${cat.icon}\n• ${cat.commands.join(" • ")}`;
+    msg += `\n\n${cat.icon}\n┏━━━━━━━━━━━━━━━━━━━━━┓\n┃ ${cat.commands.join(" • ")}\n┗━━━━━━━━━━━━━━━━━━━━━┛`;
   }
 
-  msg += `\n\nℹ️ কমান্ড বিস্তারিত জানতে: help [কমান্ডের_নাম]\n📖 অন্য পেজ দেখতে: help [page number]`;
+  msg += `\n\nℹ️ কমান্ড বিস্তারিত জানতে:\n🔹 help [কমান্ডের_নাম]\n📘 অন্য পেজ দেখতে:\n🔹 help [page number]`;
 
   return api.sendMessage(msg, event.threadID, event.messageID);
 };
