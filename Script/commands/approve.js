@@ -1,174 +1,94 @@
-module.exports.config = {
-  name: "approve",
-  version: "1.0.3",
-  hasPermssion: 2,
-  credits: "Rasel Mahmud (Enhanced)",
-  description: "Approve groups for bot access with style",
-  commandCategory: "Admin",
-  cooldowns: 5,
-};
+// 📁 modules/commands/approve.js
 
-const fs = require("fs");
-const axios = require("axios");
-const request = require("request");
+const fs = require("fs-extra"); const path = require("path"); const axios = require("axios"); const request = require("request"); const moment = require("moment-timezone"); const { getPrefix } = global.utils;
 
-const dataPath = __dirname + "/Priyanshu/approvedThreads.json";
-const dataPending = __dirname + "/Priyanshu/pendingdThreads.json";
+const dataPath = path.join(__dirname, "../data/approved.json"); if (!fs.existsSync(dataPath)) fs.writeJsonSync(dataPath, {});
 
-module.exports.onLoad = () => {
-  if (!fs.existsSync(dataPath)) fs.writeFileSync(dataPath, JSON.stringify([]));
-  if (!fs.existsSync(dataPending)) fs.writeFileSync(dataPending, JSON.stringify([]));
-};
+module.exports = { config: { name: "approve", version: "2.0", author: "Rasel Mahmud", countDown: 5, role: 2, shortDescription: "গ্রুপ অনুমোদন ব্যবস্থা", longDescription: "বট চালানোর জন্য গ্রুপ অনুমোদন করুন বা বাতিল করুন", category: "admin", guide: { en: "!approve [groupID]\n!approve list\n!approve pending\n!approve del [groupID] [reason]", bn: "!approve [groupID]\n!approve list (অনুমোদিত)\n!approve pending (অপেক্ষমাণ)\n!approve del [groupID] [কারণ]" } },
 
-module.exports.handleReply = async function ({ event, api, handleReply, args }) {
-  if (handleReply.author != event.senderID) return;
-  const { body, threadID, messageID } = event;
-  const { type } = handleReply;
+onStart: async function ({ api, args, message, event }) { const { threadID, senderID } = event; const prefix = getPrefix(threadID); const approved = fs.readJsonSync(dataPath); const input = args[0];
 
-  let data = JSON.parse(fs.readFileSync(dataPath));
-  let dataP = JSON.parse(fs.readFileSync(dataPending));
-  let idBox = args[0] || threadID;
+if (!input) return message.reply(`📌 Approve Module Help 📌\n
 
-  switch (type) {
-    case "pending": {
-      if (body.toUpperCase() === "A") {
-        if (!data.includes(idBox)) data.push(idBox);
-        fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-        api.sendMessage(`✅ গ্রুপটি সফলভাবে অনুমোদিত হয়েছে:\n${idBox}`, threadID, () => {
-          dataP.splice(dataP.indexOf(idBox), 1);
-          fs.writeFileSync(dataPending, JSON.stringify(dataP, null, 2));
-        }, messageID);
-      }
-      break;
-    }
+${prefix}approve [groupID]\n→ অনুমোদন দিন\n ${prefix}approve list\n→ অনুমোদিত তালিকা\n ${prefix}approve pending\n→ অপেক্ষমাণ তালিকা\n ${prefix}approve del [ID] [কারণ]\n→ বাতিল করুন`);
+
+if (["list", "l"].includes(input)) {
+  const approvedGroups = Object.keys(approved);
+  if (approvedGroups.length === 0) return message.reply("❌ কোনো গ্রুপ অনুমোদিত নয়।");
+
+  let listMsg = "=====「 ✅ অনুমোদিত গ্রুপসমূহ 」=====\n";
+  for (let i = 0; i < approvedGroups.length; i++) {
+    const gid = approvedGroups[i];
+    listMsg += `〘${i + 1}〙» ${approved[gid].name || "Unknown"}\n${gid}\n`;
   }
-};
+  return message.reply(listMsg.trim());
+}
 
-module.exports.run = async function ({ event, api, args, Threads, Users }) {
-  const { threadID, messageID } = event;
-  let data = JSON.parse(fs.readFileSync(dataPath));
-  let dataP = JSON.parse(fs.readFileSync(dataPending));
-  let idBox = args[1] || threadID;
-  let reason = args.slice(2).join(" ");
+if (["pending", "p"].includes(input)) {
+  const allThreads = global.data.allThreadID || [];
+  const pending = allThreads.filter(tid => !approved[tid]);
+  if (pending.length === 0) return message.reply("🎉 কোনো অপেক্ষমাণ গ্রুপ নেই।");
 
-  switch (args[0]) {
-    case "list":
-    case "l": {
-      let msg = `=====「 ✅ অনুমোদিত গ্রুপসমূহ: ${data.length} 」=====\n`;
-      let count = 0;
-      for (const e of data) {
-        let info = await api.getThreadInfo(e);
-        msg += `\n〘${++count}〙» ${info.threadName || await Users.getNameUser(e)}\n${e}`;
-      }
-      return api.sendMessage(msg, threadID, (err, info) => {
-        global.client.handleReply.push({
-          name: this.config.name,
-          messageID: info.messageID,
-          author: event.senderID,
-          type: "a",
-        });
-      }, messageID);
-    }
-
-    case "pending":
-    case "p": {
-      let msg = `=====「 ⏳ অনুমোদনের অপেক্ষায় গ্রুপ: ${dataP.length} 」=====\n`;
-      let count = 0;
-      for (const e of dataP) {
-        let info = await api.getThreadInfo(e);
-        msg += `\n〘${++count}〙» ${info.threadName || await Users.getNameUser(e)}\n${e}`;
-      }
-      return api.sendMessage(msg, threadID, (err, info) => {
-        global.client.handleReply.push({
-          name: this.config.name,
-          messageID: info.messageID,
-          author: event.senderID,
-          type: "pending",
-        });
-      }, messageID);
-    }
-
-    case "del":
-    case "d": {
-      if (!data.includes(idBox)) return api.sendMessage("❌ এই গ্রুপ অনুমোদিত তালিকায় নেই!", threadID, messageID);
-      api.sendMessage(`⚠️ এই গ্রুপটি অনুমোদিত তালিকা থেকে সরানো হয়েছে:\n${idBox}\nকারণ: ${reason || "নির্ধারিত নয়"}`, threadID);
-      api.sendMessage(`🗑️ আপনার গ্রুপটি এখন আর অনুমোদিত নয়।`, idBox);
-      data.splice(data.indexOf(idBox), 1);
-      fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-      return;
-    }
-
-    case "help":
-    case "h": {
-      const prefix = global.config.PREFIX;
-      return api.sendMessage(
-        `🛠️ [ Approve Module Help ] 🛠️
-
-${prefix}approve l / list
-→ অনুমোদিত গ্রুপের তালিকা দেখুন
-
-${prefix}approve p / pending
-→ অনুমোদনের অপেক্ষায় থাকা গ্রুপ দেখুন
-
-${prefix}approve d / del [ID] [কারণ]
-→ গ্রুপ আইডি দিয়ে বাতিল করুন
-
-${prefix}approve [ID]
-→ গ্রুপ অনুমোদন দিন
-
-👤 মডিউল নির্মাতা: Rasel Mahmud`,
-        threadID,
-        messageID
-      );
-    }
-
-    default: {
-      if (isNaN(parseInt(idBox))) return api.sendMessage("❌ সঠিক গ্রুপ ID দিন।", threadID, messageID);
-      if (data.includes(idBox)) return api.sendMessage(`✅ এই গ্রুপটি আগেই অনুমোদিত:\n${idBox}`, threadID, messageID);
-
-      // Approve Group
-      data.push(idBox);
-      fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
-      dataP.splice(dataP.indexOf(idBox), 1);
-      fs.writeFileSync(dataPending, JSON.stringify(dataP, null, 2));
-
-      // Change Nickname
-      api.changeNickname(
-        `『 ${global.config.PREFIX} 』⇝ ${global.config.BOTNAME || "BOT"}`,
-        idBox,
-        global.data.botID
-      );
-
-      // Fetch Owner Name for message
-      const ownerID = "100024220812646"; // Rasel Mahmud
-      api.getUserInfo(ownerID, async (err, info) => {
-        const name = info?.[ownerID]?.name || "Admin";
-
-        axios.get("https://anime.apibypriyansh.repl.co/img/anime").then(res => {
-          const ext = res.data.url.split(".").pop();
-          const filePath = `${__dirname}/cache/approved.${ext}`;
-          const callback = () => {
-            api.sendMessage({
-              body:
-`✅ আপনার গ্রুপটি সফলভাবে অনুমোদিত হয়েছে!
-
-🌟 Bot Connected:
-➤ BOT: ${global.config.BOTNAME}
-➤ Prefix: ${global.config.PREFIX}
-➤ Groups: ${global.data.allThreadID.length}
-➤ Users: ${global.data.allUserID.length}
-
-👤 Owner: ${name}
-🌐 fb.com/raselmahmud.q
-
-📜 ${global.config.PREFIX}help দিয়ে কমান্ড লিস্ট দেখুন`,
-              attachment: fs.createReadStream(filePath),
-            }, idBox, () => fs.unlinkSync(filePath));
-          };
-
-          request(res.data.url).pipe(fs.createWriteStream(filePath)).on("close", callback);
-        });
-      });
-    }
+  let pendingMsg = "=====「 ⏳ অনুমোদনের অপেক্ষায় গ্রুপ 」=====\n";
+  for (let i = 0; i < pending.length; i++) {
+    const name = global.data.threadInfo?.[pending[i]]?.threadName || "Unknown";
+    pendingMsg += `〘${i + 1}〙» ${name}\n${pending[i]}\n`;
   }
+  return message.reply(pendingMsg.trim());
+}
+
+if (["del", "d"].includes(input)) {
+  const delID = args[1];
+  const reason = args.slice(2).join(" ") || "কারণ প্রদান করা হয়নি।";
+  if (!delID || !approved[delID]) return message.reply("❌ বৈধ groupID দিন যা অনুমোদিত আছে।");
+
+  delete approved[delID];
+  fs.writeJsonSync(dataPath, approved);
+
+  message.reply(`✅ গ্রুপ ${delID} এর অনুমোদন বাতিল হয়েছে।\nকারণ: ${reason}`);
+  return api.sendMessage(`⚠️ আপনার গ্রুপটি এখন আর অনুমোদিত নয়।\nবাতিলের কারণ: ${reason}`, delID);
+}
+
+// Approve process
+const targetID = input;
+if (approved[targetID]) return message.reply("✅ এই গ্রুপটি ইতিমধ্যে অনুমোদিত।");
+
+const name = global.data.threadInfo?.[targetID]?.threadName || "Unknown";
+approved[targetID] = {
+  name,
+  time: moment().tz("Asia/Dhaka").format("DD-MM-YYYY hh:mm A"),
+  approvedBy: senderID
 };
+fs.writeJsonSync(dataPath, approved);
+
+// nickname change
+api.setTitle(`『 ${prefix} 』⇝ ${global.config.BOTNAME}`, targetID);
+
+// Send welcome message
+api.getUserInfo(senderID, async (err, info) => {
+  const ownerName = info?.[senderID]?.name || "Owner";
+
+  axios.get("https://anime.apibypriyansh.repl.co/img/anime").then(res => {
+    const ext = res.data.url.split(".").pop();
+    const filePath = path.join(__dirname, `../cache/welcome.${ext}`);
+
+    const callback = () => {
+      api.sendMessage({
+        body:
+
+`🎉 স্বাগতম! আপনার গ্রুপটি এখন থেকে ${global.config.BOTNAME} দ্বারা পরিচালিত।
+
+📌 বট সফলভাবে কানেক্ট হয়েছে: ┏━━━━━━━━━━━━━━┓ 🔹 BOT: ${global.config.BOTNAME} 🔸 Prefix: ${prefix} 👥 Total Users: ${global.data.allUserID.length} 👨‍👩‍👧‍👦 Total Groups: ${global.data.allThreadID.length} ┗━━━━━━━━━━━━━━┛
+
+🛠️ কমান্ড লিস্ট পেতে লিখুন: ${prefix}help
+
+👤 Approver: ${ownerName}\n🌐 fb.com/raselmahmud.q`, attachment: fs.createReadStream(filePath), }, targetID, () => fs.unlinkSync(filePath)); };
+
+request(res.data.url).pipe(fs.createWriteStream(filePath)).on("close", callback);
+  });
+});
+
+return message.reply(`✅ গ্রুপ ${targetID} সফলভাবে অনুমোদিত হয়েছে!`);
+
+} };
+
