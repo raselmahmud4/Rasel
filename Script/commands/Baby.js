@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const baseApiUrl = async () => {
-    const base = await axios.get(`https://raw.githubusercontent.com/Blankid018/D1PT0/main/baseApiUrl.json`);
+    const base = await axios.get(`https://raw.githubusercontent.com/Mostakim0978/D1PT0/refs/heads/main/baseApiUrl.json`);
     return base.data.api;
 };
 
@@ -38,7 +38,7 @@ module.exports.run = async function ({ api, event, args, Users }) {
     }
 
     if (args[0] === 'rm' && dipto.includes('-')) {
-      const [fi, f] = dipto.replace("rm ", "").split(/\s*-\s*/);
+      const [fi, f] = dipto.replace("rm ", "").split(' - ');
       const respons = await axios.get(`${link}?remove=${fi}&index=${f}`);
       return api.sendMessage(respons.data.message, event.threadID, event.messageID);
     }
@@ -50,7 +50,7 @@ module.exports.run = async function ({ api, event, args, Users }) {
         const teachers = await Promise.all(data.map(async (item) => {
           const number = Object.keys(item)[0];
           const value = item[number];
-          const name = await Users.getNameUser(number).catch(()=>{}) || "unknown";
+          const name = await Users.getName(number) || "unknown";
           return { name, value };
         }));
         teachers.sort((a, b) => b.value - a.value);
@@ -69,7 +69,7 @@ module.exports.run = async function ({ api, event, args, Users }) {
     }
 
     if (args[0] === 'edit') {
-      const command = dipto.split(/\s*-\s*/)[1];
+      const command = dipto.split(' - ')[1];
       if (command.length < 2) {
         return api.sendMessage('❌ | Invalid format! Use edit [YourMessage] - [NewReply]', event.threadID, event.messageID);
       }
@@ -78,18 +78,18 @@ module.exports.run = async function ({ api, event, args, Users }) {
     }
 
     if (args[0] === 'teach' && args[1] !== 'amar' && args[1] !== 'react') {
-      const [comd, command] = dipto.split(/\s*-\s*/);
+      const [comd, command] = dipto.split(' - ');
       const final = comd.replace("teach ", "");
       if (command.length < 2) {
         return api.sendMessage('❌ | Invalid format! Use [YourMessage] - [Reply1], [Reply2], [Reply3]... OR remove [YourMessage] OR list OR edit [YourMessage] - [NewReply]', event.threadID, event.messageID);
       }
-      const re = await axios.get(`${link}?teach=${encodeURIComponent(final)}&reply=${encodeURIComponent(command)}&senderID=${uid}&threadID=${event.threadID}`);
-      const name = await Users.getNameUser(re.data.teacher).catch(() => {}) || "unknown";
+      const re = await axios.get(`${link}?teach=${final}&reply=${command}&senderID=${uid}`);
+      const name = await Users.getName(re.data.teacher) || "";
       return api.sendMessage(`✅ Replies added ${re.data.message}\nTeacher: ${name || "unknown"}\nTeachs: ${re.data.teachs}`, event.threadID, event.messageID);
     }
 
     if (args[0] === 'teach' && args[1] === 'amar') {
-      const [comd, command] = dipto.split(/\s*-\s*/);
+      const [comd, command] = dipto.split(' - ');
       const final = comd.replace("teach ", "");
       if (command.length < 2) {
         return api.sendMessage('❌ | Invalid format! Use [YourMessage] - [Reply1], [Reply2], [Reply3]... OR remove [YourMessage] OR list OR edit [YourMessage] - [NewReply]', event.threadID, event.messageID);
@@ -99,7 +99,7 @@ module.exports.run = async function ({ api, event, args, Users }) {
     }
 
     if (args[0] === 'teach' && args[1] === 'react') {
-      const [comd, command] = dipto.split(/\s*-\s*/);
+      const [comd, command] = dipto.split(' - ');
       const final = comd.replace("teach react ", "");
       if (command.length < 2) {
         return api.sendMessage('❌ | Invalid format! Use [teach] [YourMessage] - [Reply1], [Reply2], [Reply3]... OR [teach] [react] [YourMessage] - [react1], [react2], [react3]... OR remove [YourMessage] OR list OR edit [YourMessage] - [NewReply]', event.threadID, event.messageID);
@@ -155,13 +155,12 @@ try{
    
 module.exports.handleEvent = async function ({ api, event }) {
 try{
-   const body = event.body ? event.body?.toLowerCase() : ""
-        if (body.startsWith("baby") || body.startsWith("bby") || body.startsWith("bot") || body.startsWith("jan") || body.startsWith("babu") || body.startsWith("janu")) {
-            const arr = body.replace(/^\S+\s*/, "")
-        const randomReplies = ["😚", "Yes 😀, I am here", "What's up?", "Bolo jaan ki korte panmr jonno"];
-            if (!arr) {
-    await api.sendMessage(randomReplies[Math.floor(Math.random() * randomReplies.length)], event.threadID, (error, info) => {
-            global.client.handleReply.push({
+    const body = event.body ? event.body.toLowerCase() : ""
+    if(body.startsWith("baby") || body.startsWith("bby") || body.startsWith("janu")){
+        const arr = body.replace(/^\S+\s*/, "")
+      if(!arr) {
+                                     await api.sendMessage("Yes 😀, i am here ", event.threadID, (error, info) => {
+          global.client.handleReply.push({
             name: this.config.name,
             type: "reply",
             messageID: info.messageID,
