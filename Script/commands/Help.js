@@ -1,123 +1,71 @@
 module.exports.config = {
-  name: "help",
-  version: "2.0.0",
-  hasPermssion: 0,
+  name: "help2",
+  version: "1.0.0",
+  permission: 0,
   credits: "Rasel Mahmud",
-  description: "Paginated help command with rich formatting",
-  commandCategory: "system",
-  usages: "[command name | page number]",
-  cooldowns: 5
+  description: "Get command details or see full command list",
+  prefix: true,
+  category: "system",
+  usages: "[command name]",
+  cooldowns: 1,
 };
 
-module.exports.languages = {
-  "en": {
-    "moduleInfo": `╔═════[ ℹ️ 𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗜𝗡𝗙𝗢 ]═════╗
-🔹 নাম: %1
-📄 বিবরণ: %2
-📌 ব্যবহার: %3
-📂 ক্যাটেগরি: %4
-⏱️ কুলডাউন: %5s
-👤 পারমিশন: %6
-💠 ক্রেডিট: %7
-╚════════════════════╝`,
-    "user": "User",
-    "adminGroup": "Admin (Group)",
-    "adminBot": "Admin (Bot)",
-    "notFound": "❌ '%1' নামে কোনো কমান্ড খুঁজে পাওয়া যায়নি।",
-    "pageNotFound": "❌ %1 নম্বর হেল্প পেজ খুঁজে পাওয়া যায়নি।"
-  }
-};
+module.exports.run = async ({ api, event, args, commands, getText }) => {
+  const axios = require("axios");
+  const fs = require("fs-extra");
 
-module.exports.handleEvent = function ({ api, event, getText }) {
-  const { commands } = global.client;
-  const { threadID, messageID, body } = event;
-  if (!body || !body.toLowerCase().startsWith("help")) return;
+  const prefix = global.config.PREFIX;
+  const { threadID, messageID } = event;
+  const threadSetting = global.data.threadData.get(threadID) || {};
+  const command = args[0];
 
-  const args = body.trim().split(/\s+/);
-  if (args.length === 1) return module.exports.run({ api, event });
+  const autoUnsend = true;
+  const delayUnsend = 300;
 
-  const query = args[1].toLowerCase();
-  const command = commands.get(query);
+  const commandList = Array.from(commands.keys());
 
   if (command) {
-    const threadSetting = global.data.threadData.get(threadID) || {};
-    const prefix = threadSetting.PREFIX || global.config.PREFIX;
-    const perm = command.config.hasPermssion === 0
-      ? getText("user")
-      : command.config.hasPermssion === 1
-      ? getText("adminGroup")
-      : getText("adminBot");
+    const cmd = commands.get(command.toLowerCase());
+    if (!cmd) return api.sendMessage(`❌ No command named '${command}' found.`, threadID, messageID);
 
     return api.sendMessage(
-      getText(
-        "moduleInfo",
-        command.config.name,
-        command.config.description || "🚫 কোনো বিবরণ নেই",
-        `${prefix}${command.config.name}${command.config.usages ? " " + command.config.usages : ""}`,
-        command.config.commandCategory || "Uncategorized",
-        command.config.cooldowns || 5,
-        perm,
-        command.config.credits || "Unknown"
-      ),
+      `「 ${cmd.config.name} 」\n` +
+      `${cmd.config.description || "No description available."}\n\n` +
+      `❯ Usage: ${cmd.config.usages || "No usage provided"}\n` +
+      `❯ Category: ${cmd.config.category || "Uncategorized"}\n` +
+      `❯ Waiting time: ${cmd.config.cooldowns || 1} seconds(s)\n` +
+      `❯ Permission: ${cmd.config.permission == 0 ? "User" : cmd.config.permission == 1 ? "Admin" : "Adminbot"}\n\n` +
+      `» Module code by ${cmd.config.credits || "Unknown"} «`,
       threadID,
-      messageID
+      async (err, info) => {
+        if (autoUnsend) {
+          await new Promise(resolve => setTimeout(resolve, delayUnsend * 1000));
+          return api.unsendMessage(info.messageID);
+        }
+      }
     );
-  } else if (!isNaN(query)) {
-    return module.exports.run({ api, event, args });
-  } else {
-    return api.sendMessage(getText("notFound", query), threadID, messageID);
-  }
-};
-
-module.exports.run = async function ({ api, event, args }) {
-  const { commands } = global.client;
-  const categories = {};
-  const catIcons = {
-    media: "🎥 MEDIA",
-    ai: "🤖 AI",
-    fun: "🎮 FUN",
-    system: "⚙️ SYSTEM",
-    group: "👥 GROUP",
-    info: "📌 INFO",
-    tools: "🛠 TOOLS",
-    user: "👤 USER",
-    others: "📁 OTHERS"
-  };
-
-  for (const [, command] of commands) {
-    const category = command.config.commandCategory?.toLowerCase() || "others";
-    if (!categories[category]) categories[category] = [];
-    categories[category].push(command.config.name);
   }
 
-  const sortedCategories = Object.entries(categories)
-    .sort((a, b) => b[1].length - a[1].length)
-    .map(([name, cmds]) => ({
-      name,
-      icon: catIcons[name] || `📁 ${name.toUpperCase()}`,
-      commands: cmds.sort((a, b) => a.localeCompare(b))
-    }));
+  let page = parseInt(args[0]) || 1;
+  const itemsPerPage = 30;
+  const totalPages = Math.ceil(commandList.length / itemsPerPage);
 
-  const pageSize = 5;
-  const rawPage = args?.[0];
-  const page = !rawPage || isNaN(rawPage) ? 1 : parseInt(rawPage);
-  const totalPages = Math.ceil(sortedCategories.length / pageSize);
+  if (page < 1 || page > totalPages) page = 1;
 
-  if (page > totalPages || page < 1) {
-    return api.sendMessage(global.getText("help", "pageNotFound", page), event.threadID, event.messageID);
-  }
+  const startIdx = (page - 1) * itemsPerPage;
+  const endIdx = startIdx + itemsPerPage;
+  const displayedCommands = commandList.slice(startIdx, endIdx);
 
-  const start = (page - 1) * pageSize;
-  const end = start + pageSize;
-  const pageCategories = sortedCategories.slice(start, end);
+  const msg = displayedCommands.map((name, index) => `✰『 ${startIdx + index + 1} 』 ➬${name}`).join("\n");
 
-  let msg = `╔═══『 ✨ 𝗠𝗔𝗚𝗜𝗖 𝗢𝗙 𝗦𝗢𝗨𝗡𝗗 ✨ 』═══╗\n      📖 হেল্প পেজ: ${page}/${totalPages}\n╚═════════════════════════╝`;
-
-  for (const cat of pageCategories) {
-    msg += `\n\n${cat.icon}\n┏━━━━━━━━━━━━━━━━━━━━━┓\n┃ ${cat.commands.join(" • ")}\n┗━━━━━━━━━━━━━━━━━━━━━┛`;
-  }
-
-  msg += `\n\nℹ️ কমান্ড বিস্তারিত জানতে:\n🔹 help [কমান্ডের_নাম]\n📘 অন্য পেজ দেখতে:\n🔹 help [page number]`;
-
-  return api.sendMessage(msg, event.threadID, event.messageID);
+  api.sendMessage(
+    `Page Cmds  💯💯💖𝐌𝐚𝐝𝐞 𝐁𝐲 𝐑𝐚𝐬𝐞𝐥 𝐌𝐚𝐡𝐦𝐮𝐝\n\n${msg}\n\nPage (${page}/${totalPages})`,
+    threadID,
+    async (err, info) => {
+      if (autoUnsend) {
+        await new Promise(resolve => setTimeout(resolve, delayUnsend * 1000));
+        return api.unsendMessage(info.messageID);
+      }
+    }
+  );
 };
